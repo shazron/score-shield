@@ -53,6 +53,8 @@ npm run test:unit    # Fast logic tests
 npm run lint         # ESLint
 npm test             # Unit tests, deployment build, rendered-page test
 npm run build        # Deployment build only
+npm run wiki:init    # Generate initial OpenWiki repository documentation
+npm run wiki:update  # Refresh OpenWiki documentation non-interactively
 ```
 
 Do not run `npm run setup` merely to inspect the project because it can install system packages. Use `npm run setup:check` for diagnostics and `node scripts/setup.mjs --dry-run` to inspect planned commands.
@@ -86,6 +88,17 @@ Add regression tests for cue boundaries, invalid score regressions, malformed mo
 ## Documentation and deployment
 
 - Update `README.md`, `.env.example`, and this file when commands, prerequisites, configuration, architecture, or product limitations change.
+- OpenWiki is installed globally at the version documented in `README.md`. Its scheduled GitHub Actions workflow updates `openwiki/`, and `AGENTS.md` through a documentation pull request; do not place provider credentials in workflow files.
 - The hosted Sites deployment is the UI/demo surface. The local Node processor is not bundled into the Cloudflare-compatible deployment artifact.
 - Do not commit `.env`, `artifacts/`, downloaded video, extracted frames, temporary archives, credentials, or source-repository tokens.
 - Do not publish, change site access, rotate credentials, or push to an external remote unless the user explicitly requests it or the active hosting workflow requires it.
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+This repository uses OpenWiki for recurring code documentation. Start with `openwiki/quickstart.md`, then follow its links to architecture, workflows, domain concepts, operations, integrations, testing guidance, and source maps.
+
+The scheduled OpenWiki GitHub Actions workflow refreshes the repository wiki. Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate.
+
+<!-- OPENWIKI:END -->

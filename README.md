@@ -4,6 +4,26 @@ Score Shield is a Node.js and React reference implementation for spoiler-free sp
 
 The hosted interface and interactive demo are available at [score-shield-sports.shazron.chatgpt.site](https://score-shield-sports.shazron.chatgpt.site). Real video processing runs locally because it requires FFmpeg, `yt-dlp`, filesystem access, and an OpenAI API key.
 
+## Why?
+
+Watching a recorded match should still feel live. Fans often avoid news, social media, and messages until they have time to watch, only to have the result revealed by the streaming page itself. A title such as `England vs France 6–4 — World Cup 2026` gives away the final score before the viewer presses play. Even a title that only names the winner can remove most of the suspense.
+
+The problem also affects games watched across multiple sessions. Streaming services such as YouTube can remember the playhead and resume a video where the viewer stopped. If someone pauses at halftime and returns later, the platform may put them back at the correct moment while still surrounding the player with a title, thumbnail, description, or recommendation based on the completed match. The playback position is preserved, but the viewing experience has already been spoiled.
+
+Score Shield treats the title as part of the playback experience instead of permanent text. The generated metadata track records how the score changes over time, allowing the interface to show only what was known at the viewer's current position. Starting from the beginning shows the opening score; resuming midway shows the score at that moment; seeking backward restores an earlier state; and seeking forward updates only after the destination is reached.
+
+This approach gives streaming providers a practical way to preserve suspense without maintaining a separate spoiler-free edit of every game. The original video stays unchanged, while a small sidecar or embedded metadata track controls spoiler-safe titles, score displays, chapter labels, and future highlight experiences.
+
+## Access the preview directly
+
+Open the public preview in any modern browser:
+
+**[Open the Score Shield preview](https://score-shield-sports.shazron.chatgpt.site)**
+
+No ChatGPT login is required, so the link can be shared directly with demo viewers. On the landing screen, select **Preview the experience** to run the built-in FRA vs ENG demonstration and see the protected title and score update as playback advances or the timeline is scrubbed.
+
+The hosted preview uses public demonstration data and does not run the video-processing worker. To analyze a YouTube video and generate a new score timeline, follow [Prepare a development machine](#prepare-a-development-machine), [Configure AI analysis](#configure-ai-analysis), and [Run locally](#run-locally) below.
+
 ## How it works
 
 ```text
@@ -21,7 +41,16 @@ The AI produces candidate observations. Deterministic application code decides w
 
 ## Prerequisite
 
-Install Node.js 22.13 or newer. The setup command can install the remaining project and media dependencies, but it cannot install Node.js because `npm` itself requires Node.
+Install Node.js 22.13 or newer from the [official Node.js download page](https://nodejs.org/en/download). Choose an LTS release unless you have a reason to use the current release. The Node.js installer includes `npm`, so there is no separate npm download.
+
+After installation, open a new terminal and verify both commands are available:
+
+```bash
+node --version
+npm --version
+```
+
+The setup command below can install the remaining project and media dependencies, but it cannot install Node.js because `npm` itself requires Node. For version-manager and platform-specific options, see npm's official [Node.js and npm installation guide](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/).
 
 ## Prepare a development machine
 
@@ -161,7 +190,22 @@ npm run test:unit    # Run timeline, WebVTT, and setup tests
 npm test             # Run unit tests, production build, and rendered-page test
 npm run lint         # Run ESLint
 npm run build        # Build the hosted React experience
+npm run wiki:init    # Generate the initial OpenWiki repository documentation
+npm run wiki:update  # Refresh OpenWiki documentation non-interactively
 ```
+
+## OpenWiki documentation
+
+[OpenWiki](https://github.com/langchain-ai/openwiki) can generate agent-oriented repository documentation under `openwiki/`. Install the pinned CLI version, ensure `OPENAI_API_KEY` is configured in `.env`, and then generate the first version locally:
+
+```bash
+npm install --global openwiki@0.2.0
+npm run wiki:init
+```
+
+The workflow at `.github/workflows/openwiki-update.yml` runs daily and can also be started manually from the GitHub Actions tab. It refreshes the wiki and opens or updates a `docs: update OpenWiki` pull request rather than writing directly to the default branch.
+
+Before running the workflow, add `OPENAI_API_KEY` as a GitHub Actions repository secret under **Settings → Secrets and variables → Actions**. Under **Settings → Actions → General → Workflow permissions**, also allow GitHub Actions to create pull requests. The workflow uses OpenAI with `gpt-5.6-terra`; change `OPENWIKI_PROVIDER`, `OPENWIKI_MODEL_ID`, and the corresponding secret if another [supported provider](https://github.com/langchain-ai/openwiki#customizing) is preferred. CI telemetry is disabled in the checked-in workflow.
 
 ## Current limitations
 

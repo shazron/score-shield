@@ -16,6 +16,8 @@
     "test": "npm run test:unit && npm run build && node --test tests/rendered-html.test.mjs",
     "test:unit": "node --test tests/pipeline.test.mjs tests/setup.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "wiki:init": "openwiki code --init",
+    "wiki:update": "openwiki code --update --print",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
