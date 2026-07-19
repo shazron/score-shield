@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_VIDEO_URL = "https://www.youtube.com/watch?v=jIrmswHtg9E";
 const PROCESSOR_URL = process.env.NEXT_PUBLIC_PROCESSOR_URL ?? "http://localhost:8787";
+const DEMO_DURATION_SECONDS = 917;
+const DEMO_FRAME_COUNT = 46;
 
 type Stage = "downloading" | "extracting" | "analyzing" | "reconciling" | "exporting" | "complete" | "failed";
 
@@ -28,10 +30,17 @@ type ScoreCue = {
 };
 
 const demoCues: ScoreCue[] = [
-  { start: 0, end: 78, home: { name: "Home", score: 0 }, away: { name: "Away", score: 0 }, confidence: 0.99 },
-  { start: 78, end: 156, home: { name: "Home", score: 1 }, away: { name: "Away", score: 0 }, confidence: 0.96, event: { type: "score" } },
-  { start: 156, end: 238, home: { name: "Home", score: 1 }, away: { name: "Away", score: 1 }, confidence: 0.95, event: { type: "score" } },
-  { start: 238, end: 320, home: { name: "Home", score: 2 }, away: { name: "Away", score: 1 }, confidence: 0.97, event: { type: "score" } },
+  { start: 0, end: 130, home: { name: "FRA", score: 0 }, away: { name: "ENG", score: 0 }, confidence: 0.99 },
+  { start: 130, end: 255, home: { name: "FRA", score: 0 }, away: { name: "ENG", score: 1 }, confidence: 0.98, event: { type: "score" } },
+  { start: 255, end: 400, home: { name: "FRA", score: 0 }, away: { name: "ENG", score: 2 }, confidence: 0.98, event: { type: "score" } },
+  { start: 400, end: 470, home: { name: "FRA", score: 0 }, away: { name: "ENG", score: 3 }, confidence: 0.97, event: { type: "score" } },
+  { start: 470, end: 500, home: { name: "FRA", score: 0 }, away: { name: "ENG", score: 4 }, confidence: 0.98, event: { type: "score" } },
+  { start: 500, end: 550, home: { name: "FRA", score: 1 }, away: { name: "ENG", score: 4 }, confidence: 0.98, event: { type: "score" } },
+  { start: 550, end: 635, home: { name: "FRA", score: 2 }, away: { name: "ENG", score: 4 }, confidence: 0.98, event: { type: "score" } },
+  { start: 635, end: 735, home: { name: "FRA", score: 3 }, away: { name: "ENG", score: 4 }, confidence: 0.98, event: { type: "score" } },
+  { start: 735, end: 785, home: { name: "FRA", score: 3 }, away: { name: "ENG", score: 5 }, confidence: 0.98, event: { type: "score" } },
+  { start: 785, end: 825, home: { name: "FRA", score: 4 }, away: { name: "ENG", score: 5 }, confidence: 0.98, event: { type: "score" } },
+  { start: 825, end: DEMO_DURATION_SECONDS, home: { name: "FRA", score: 4 }, away: { name: "ENG", score: 6 }, confidence: 0.99, event: { type: "score" } },
 ];
 
 const stages: Array<{ id: Exclude<Stage, "failed">; label: string }> = [
@@ -128,9 +137,9 @@ function Landing({ onProcess, onDemo }: { onProcess: (url: string) => Promise<vo
           <div className="score-card">
             <div className="card-top"><span>LIVE AT YOUR PACE</span><span className="encrypted">● PROTECTED</span></div>
             <div className="teams">
-              <div><span className="team-badge home-badge">H</span><strong>HOME</strong></div>
+              <div><span className="team-badge home-badge">F</span><strong>FRA</strong></div>
               <div className="score"><span>0</span><i>–</i><span>0</span></div>
-              <div><span className="team-badge away-badge">A</span><strong>AWAY</strong></div>
+              <div><span className="team-badge away-badge">E</span><strong>ENG</strong></div>
             </div>
             <div className="timeline"><span style={{ width: "37%" }} /><b style={{ left: "37%" }} /></div>
             <div className="card-bottom"><span>18:42 watched</span><span>Future score hidden</span></div>
@@ -277,7 +286,7 @@ export default function Home() {
     const stagePlan: Array<{ stage: Progress["stage"]; end: number; message: string }> = [
       { stage: "downloading", end: 26, message: "Downloading an authorized source copy…" },
       { stage: "extracting", end: 43, message: "Sampling timestamped frames…" },
-      { stage: "analyzing", end: 88, message: "Reading scoreboard changes with AI…" },
+      { stage: "analyzing", end: 88, message: "Reading FRA–ENG scoreboard changes with AI…" },
       { stage: "reconciling", end: 96, message: "Rejecting replays and verifying transitions…" },
       { stage: "exporting", end: 100, message: "Writing the WebVTT metadata track…" },
     ];
@@ -289,7 +298,7 @@ export default function Home() {
       const plan = stagePlan[Math.max(0, planIndex)];
       const previousEnd = planIndex > 0 ? stagePlan[planIndex - 1].end : 0;
       const stageProgress = ((overall - previousEnd) / (plan.end - previousEnd)) * 100;
-      setProgress({ stage: plan.stage, overallProgress: overall, stageProgress, message: plan.message, elapsedSeconds: (Date.now() - started) / 1000, etaSeconds: 100 - overall, processedFrames: plan.stage === "analyzing" ? Math.round(stageProgress * 1.82) : undefined, totalFrames: plan.stage === "analyzing" ? 182 : undefined });
+      setProgress({ stage: plan.stage, overallProgress: overall, stageProgress, message: plan.message, elapsedSeconds: (Date.now() - started) / 1000, etaSeconds: 100 - overall, processedFrames: plan.stage === "analyzing" ? Math.min(DEMO_FRAME_COUNT, Math.round(stageProgress * DEMO_FRAME_COUNT / 100)) : undefined, totalFrames: plan.stage === "analyzing" ? DEMO_FRAME_COUNT : undefined });
       if (overall === 100) {
         if (demoTimer.current) clearInterval(demoTimer.current);
         window.setTimeout(() => { setCues(demoCues); setView("player"); }, 500);

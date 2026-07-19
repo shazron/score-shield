@@ -21,5 +21,8 @@ test("server-renders the Score Shield product shell", async () => {
   assert.match(html, /Every score arrives/);
   assert.match(html, /Process video/);
   assert.match(html, /jIrmswHtg9E/);
+  assert.match(html, />FRA</);
+  assert.match(html, />ENG</);
+  assert.doesNotMatch(html, />HOME<|>AWAY</);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
