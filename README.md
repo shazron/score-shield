@@ -14,13 +14,13 @@ The hosted interface and interactive demo are available at [score-shield-sports.
 
 ## Why?
 
-Watching a recorded match should still feel live. Fans often avoid news, social media, and messages until they have time to watch, only to have the result revealed by the streaming page itself. A title such as `England vs France 6–4 — World Cup 2026` gives away the final score before the viewer presses play. Even a title that only names the winner can remove most of the suspense.
+Recorded games should still feel live. Yet streaming titles, thumbnails, and recommendations often reveal the result before playback begins.
 
-The problem also affects games watched across multiple sessions. Streaming services such as YouTube can remember the playhead and resume a video where the viewer stopped. If someone pauses at halftime and returns later, the platform may put them back at the correct moment while still surrounding the player with a title, thumbnail, description, or recommendation based on the completed match. The playback position is preserved, but the viewing experience has already been spoiled.
+Resuming later can be just as frustrating: YouTube may restore the correct playhead while still displaying information from the completed match.
 
-Score Shield treats the title as part of the playback experience instead of permanent text. The generated metadata track records how the score changes over time, allowing the interface to show only what was known at the viewer's current position. Starting from the beginning shows the opening score; resuming midway shows the score at that moment; seeking backward restores an earlier state; and seeking forward updates only after the destination is reached. Dynamic titles are marked `(in progress)` until playback actually ends, when the title changes to `(final)`.
+Score Shield keeps the title synchronized with the viewer. It shows only the score at the current playhead, marks it `(in progress)`, and reveals `(final)` only when playback ends—all without modifying the original video.
 
-This approach gives streaming providers a practical way to preserve suspense without maintaining a separate spoiler-free edit of every game. The original video stays unchanged, while a small sidecar or embedded metadata track controls spoiler-safe titles, score displays, chapter labels, and future highlight experiences.
+The idea also extends beyond sports scores. Chapter markers, event milestones, speakers, or other timed metadata could dynamically update a title with context from the current moment—without revealing what comes next.
 
 ## Access the preview directly
 
