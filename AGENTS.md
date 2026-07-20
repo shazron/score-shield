@@ -85,6 +85,7 @@ Do not run `npm run setup` merely to inspect the project because it can install 
 - Avoid relying on the model to enforce score monotonicity, replay rejection, or cue boundaries; implement those rules in testable deterministic code.
 - Keep the interactive demo usable without a processor or API key, and clearly distinguish demo data from real analysis.
 - Maintain keyboard access, useful labels, reduced-motion behavior, and mobile layouts when changing the React UI.
+- Preserve the Apache License 2.0 header in authored TypeScript, JavaScript-module, and CSS source files. Keep `package.json` and `LICENSE` aligned on the `Apache-2.0` identifier.
 
 ## Testing expectations
 

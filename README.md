@@ -136,6 +136,32 @@ Downloaded YouTube media is cached by video URL under `artifacts/cache/youtube/`
 
 The terminal running `npm run dev` prints timestamped JSON logs for each local processing job. These include source-cache hits and misses, `yt-dlp` download progress, FFprobe inspection, FFmpeg frame extraction, AI frame counts, reconciliation, artifact export, completion, and failures. Logs intentionally omit API keys, model responses, detected scores, and the source video's title.
 
+## Use the local Worker debugger
+
+During `npm run dev`, Vite may print two web addresses:
+
+```text
+Local:  http://localhost:3000/
+Debug:  http://localhost:3000/__debug
+```
+
+The **Local** address is the Score Shield interface. The optional **Debug** address is supplied by the Cloudflare development plugin; it redirects to Cloudflare DevTools and connects that debugger to the locally emulated Worker. It is not another Score Shield page.
+
+To try it:
+
+1. Keep `npm run dev` running and open `http://localhost:3000` in one tab.
+2. Open `http://localhost:3000/__debug` in a second tab. It should redirect to a DevTools interface. If the browser blocks extra tabs, allow pop-ups for localhost; the plugin may open one debugger tab per Worker.
+3. Select **Sources**, press <kbd>Command</kbd>+<kbd>P</kbd> on macOS or <kbd>Ctrl</kbd>+<kbd>P</kbd> on Windows/Linux, and search for `worker/index.ts`.
+4. Set a breakpoint inside the Worker's `fetch` function, then reload the normal Score Shield tab. DevTools should pause when the Worker receives the request.
+5. Use **Console** for Worker-side logs and **Network** to inspect requests handled by the Worker. Remove or disable the breakpoint when finished.
+
+This debugger covers the Cloudflare Worker and server-rendering path used by the React site. It does **not** debug browser-side React code or the local media processor:
+
+- For React interactions, use the normal browser developer tools on the `localhost:3000` tab.
+- For downloads, FFmpeg, AI analysis, and the API on port `8787`, use the terminal output from `npm run dev` or `npm run processor`.
+
+The `__debug` route exists only in the local development/preview server and is not a deployed product route. Do not expose the local development server publicly while the inspector is enabled.
+
 ## Processing progress
 
 The processor reports structured progress through Server-Sent Events:
@@ -249,3 +275,7 @@ Read [`AGENTS.md`](AGENTS.md) before changing the project. At minimum, run `npm 
 ## Responsible use
 
 Score Shield is a reference implementation, not a mechanism for bypassing media access controls. Process only videos you own or are authorized to download and analyze, respect the source platform's terms, and do not redistribute downloaded source media.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE).
