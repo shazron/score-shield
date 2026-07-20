@@ -24,7 +24,7 @@ Preserve these product invariants:
 - Media pipeline: `server/pipeline.mjs`, invoking `yt-dlp`, FFprobe, and FFmpeg.
 - AI: OpenAI JavaScript SDK with Zod validation.
 - Progress transport: Server-Sent Events.
-- Generated files: `artifacts/<job-id>/`; never commit them.
+- Generated files: `artifacts/<job-id>/`; cached source media: `artifacts/cache/youtube/<url-hash>/`; never commit either.
 - Hosted UI configuration: `.openai/hosting.json`.
 
 Important files:
@@ -32,10 +32,15 @@ Important files:
 - `app/page.tsx` — submission, progress, demo, and player state.
 - `app/globals.css` — product styling and responsive behavior.
 - `server/index.mjs` — URL validation, job registry, API, CORS, and SSE.
+- `server/config.mjs` — frame-interval validation and high-frequency sampling plan.
 - `server/pipeline.mjs` — child processes, frame analysis, reconciliation, and VTT export.
+- `server/startup.mjs` — required processor environment validation.
+- `scripts/clean-artifacts.mjs` — cross-platform per-job cleanup that preserves cached video.
 - `scripts/setup.mjs` — cross-platform dependency installation and checks.
 - `scripts/dev.mjs` — combined local development launcher.
+- `tests/clean-artifacts.test.mjs` — cache-preserving cleanup behavior.
 - `tests/pipeline.test.mjs` — score reconciliation and WebVTT behavior.
+- `tests/server-startup.test.mjs` — API-key startup enforcement.
 - `tests/setup.test.mjs` — operating-system package-manager plans.
 - `tests/rendered-html.test.mjs` — deployed product shell expectations.
 
@@ -49,6 +54,7 @@ npm run setup:check  # Read-only dependency verification
 npm run dev          # Web app plus processor
 npm run dev:web      # Web app only
 npm run processor    # Processor only
+npm run artifacts:clean # Delete per-job artifacts; preserve cached YouTube media
 npm run test:unit    # Fast logic tests
 npm run lint         # ESLint
 npm test             # Unit tests, deployment build, rendered-page test
@@ -64,10 +70,16 @@ Do not run `npm run setup` merely to inspect the project because it can install 
 - Use argument arrays with `spawn`/`spawnSync`; never interpolate user input into shell command strings.
 - Keep `shell: false` for media and installer subprocesses.
 - Validate external input at the API boundary. The current ingestion endpoint intentionally allows HTTPS `youtube.com`, `www.youtube.com`, and `youtu.be` hosts only.
+- Validate `frameIntervalSeconds` at the API boundary as a whole number from 5 through 30. The per-job UI value overrides the environment default and must be recorded in the generated manifest.
+- Sample the final 120 seconds every 5 seconds. Preserve the selected interval elsewhere, account for FFmpeg's midpoint frame selection when assigning absolute timestamps, and record the high-frequency window settings in the manifest.
 - Do not weaken request-size limits, CORS, URL allowlisting, or artifact path construction without adding focused security tests.
 - Keep secrets server-side. Never place `OPENAI_API_KEY` in `NEXT_PUBLIC_*`, React state, logs, fixtures, or committed files.
+- Fail processor startup immediately when `OPENAI_API_KEY` is missing or blank, with an actionable terminal message. Do not accept jobs or begin media downloads without it.
 - Preserve `.env` and existing local artifacts. `.env.example` is the committed configuration contract.
 - Make progress updates monotonic and keep stage names compatible with the UI: `downloading`, `extracting`, `analyzing`, `reconciling`, `exporting`, `complete`, `failed`.
+- Keep processor logs operational and spoiler-safe: never log credentials, model response bodies, detected scores, source titles, or future cue contents.
+- Keep source-cache keys deterministic and derived from normalized YouTube identity. Cache only authorized source media under `artifacts/`, and prevent concurrent jobs for the same video from starting duplicate downloads.
+- Keep `npm run artifacts:clean` limited to UUID-named per-job directories and preserve `artifacts/cache/` plus unrelated directories.
 - WebVTT cues must be ordered, non-overlapping, and cover the confirmed timeline. Cue payloads contain complete score state, not only deltas.
 - Changes to model prompts or observation fields require corresponding Zod validation and fixture/test updates.
 - Avoid relying on the model to enforce score monotonicity, replay rejection, or cue boundaries; implement those rules in testable deterministic code.

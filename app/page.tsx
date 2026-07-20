@@ -4,8 +4,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_VIDEO_URL = "https://www.youtube.com/watch?v=jIrmswHtg9E";
 const PROCESSOR_URL = process.env.NEXT_PUBLIC_PROCESSOR_URL ?? "http://localhost:8787";
+const DEFAULT_FRAME_INTERVAL_SECONDS = 10;
 const DEMO_DURATION_SECONDS = 917;
-const DEMO_FRAME_COUNT = 46;
+const DEMO_FRAME_COUNT = 104;
 
 type Stage = "downloading" | "extracting" | "analyzing" | "reconciling" | "exporting" | "complete" | "failed";
 
@@ -91,8 +92,9 @@ function Header({ onReset }: { onReset?: () => void }) {
   );
 }
 
-function Landing({ onProcess, onDemo }: { onProcess: (url: string) => Promise<void>; onDemo: () => void }) {
+function Landing({ onProcess, onDemo }: { onProcess: (url: string, frameIntervalSeconds: number) => Promise<void>; onDemo: () => void }) {
   const [url, setUrl] = useState(DEFAULT_VIDEO_URL);
+  const [frameIntervalSeconds, setFrameIntervalSeconds] = useState(DEFAULT_FRAME_INTERVAL_SECONDS);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -105,7 +107,7 @@ function Landing({ onProcess, onDemo }: { onProcess: (url: string) => Promise<vo
     }
     setSubmitting(true);
     try {
-      await onProcess(url);
+      await onProcess(url, frameIntervalSeconds);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The processor could not be reached.");
       setSubmitting(false);
@@ -125,6 +127,12 @@ function Landing({ onProcess, onDemo }: { onProcess: (url: string) => Promise<vo
               <span className="youtube-glyph" aria-hidden="true">▶</span>
               <input id="video-url" value={url} onChange={(event) => setUrl(event.target.value)} spellCheck={false} />
               <button type="submit" disabled={submitting}>{submitting ? "Connecting…" : "Process video"}<span>→</span></button>
+            </div>
+            <div className="sampling-control">
+              <div className="sampling-heading"><label htmlFor="frame-interval">Frame sampling interval</label><output htmlFor="frame-interval">{frameIntervalSeconds} seconds</output></div>
+              <input id="frame-interval" type="range" min="5" max="30" step="1" value={frameIntervalSeconds} onChange={(event) => setFrameIntervalSeconds(Number(event.target.value))} aria-describedby="sampling-help" />
+              <div className="sampling-scale" aria-hidden="true"><span>5s · most precise</span><span>30s · lowest cost</span></div>
+              <p id="sampling-help">The final two minutes are always sampled every 5 seconds. Shorter intervals improve accuracy but analyze more frames and use more API calls.</p>
             </div>
             {error && <p className="form-error" role="alert">{error} <button type="button" onClick={onDemo}>Preview the experience instead</button></p>}
             <p className="consent">Only process media you are authorized to download and analyze.</p>
@@ -222,7 +230,7 @@ function YouTubePlayer({ videoId, onTime }: { videoId: string; onTime: (time: nu
   </div>;
 }
 
-function PlayerScreen({ cues, videoUrl, onReset }: { cues: ScoreCue[]; videoUrl: string; onReset: () => void }) {
+function PlayerScreen({ cues, videoUrl, vttUrl, onReset }: { cues: ScoreCue[]; videoUrl: string; vttUrl: string | null; onReset: () => void }) {
   const [time, setTime] = useState(0);
   const cue = useMemo(() => cueAt(cues, time), [cues, time]);
   const parsedUrl = new URL(videoUrl);
@@ -240,7 +248,10 @@ function PlayerScreen({ cues, videoUrl, onReset }: { cues: ScoreCue[]; videoUrl:
     <section className="player-footer">
       <div className="cue-readout"><span>ACTIVE METADATA CUE</span><strong>{formatTime(cue.start)} → {formatTime(cue.end)}</strong></div>
       <div className="safe-message"><span className="lock-icon">◆</span><p><strong>Future cues stay sealed.</strong><br />Seeking updates the title instantly without listing upcoming events.</p></div>
-      <button className="secondary-button" onClick={onReset}>Process another video</button>
+      <div className="player-actions">
+        {vttUrl && <a className="download-button" href={vttUrl} download="score-shield.vtt">Download .vtt</a>}
+        <button className="secondary-button" onClick={onReset}>Process another video</button>
+      </div>
     </section>
   </main>;
 }
@@ -249,6 +260,7 @@ export default function Home() {
   const [view, setView] = useState<"landing" | "processing" | "player">("landing");
   const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO_URL);
   const [cues, setCues] = useState<ScoreCue[]>(demoCues);
+  const [vttUrl, setVttUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress>({ stage: "downloading", stageProgress: 0, overallProgress: 0, message: "Preparing the source…" });
   const streamRef = useRef<EventSource | null>(null);
   const demoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -257,13 +269,18 @@ export default function Home() {
     streamRef.current?.close();
     if (demoTimer.current) clearInterval(demoTimer.current);
     document.title = "Score Shield · Spoiler-free sports viewing";
+    setVttUrl(null);
     setView("landing");
   }
 
-  async function processVideo(url: string) {
+  async function processVideo(url: string, frameIntervalSeconds: number) {
     setVideoUrl(url);
-    const response = await fetch(`${PROCESSOR_URL}/api/jobs`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sourceUrl: url }) });
-    if (!response.ok) throw new Error("The local processor is offline. Start it, or preview the interactive demo.");
+    setVttUrl(null);
+    const response = await fetch(`${PROCESSOR_URL}/api/jobs`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sourceUrl: url, frameIntervalSeconds }) });
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null) as { error?: string } | null;
+      throw new Error(failure?.error ?? "The local processor is offline. Start it, or preview the interactive demo.");
+    }
     const job = await response.json() as { id: string };
     setView("processing");
     const stream = new EventSource(`${PROCESSOR_URL}/api/jobs/${job.id}/events`);
@@ -274,6 +291,7 @@ export default function Home() {
       if (update.progress.stage === "complete") {
         stream.close();
         setCues(update.cues);
+        setVttUrl(`${PROCESSOR_URL}/api/jobs/${job.id}/score.vtt`);
         setView("player");
       }
       if (update.progress.stage === "failed") stream.close();
@@ -282,6 +300,7 @@ export default function Home() {
 
   function startDemo() {
     setVideoUrl(DEFAULT_VIDEO_URL);
+    setVttUrl(null);
     setView("processing");
     const stagePlan: Array<{ stage: Progress["stage"]; end: number; message: string }> = [
       { stage: "downloading", end: 26, message: "Downloading an authorized source copy…" },
@@ -310,7 +329,7 @@ export default function Home() {
     <Header onReset={reset} />
     {view === "landing" && <Landing onProcess={processVideo} onDemo={startDemo} />}
     {view === "processing" && <ProgressScreen progress={progress} onCancel={reset} />}
-    {view === "player" && <PlayerScreen cues={cues} videoUrl={videoUrl} onReset={reset} />}
+    {view === "player" && <PlayerScreen cues={cues} videoUrl={videoUrl} vttUrl={vttUrl} onReset={reset} />}
     <footer><span>Score Shield · Reference implementation</span><span>Metadata, not spoilers.</span></footer>
   </div>;
 }

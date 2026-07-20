@@ -43,6 +43,13 @@ button { cursor: pointer; }
 .input-row button:hover { background: #223646; }
 .input-row button:disabled { opacity: .65; }
 .input-row button span { color: var(--lime); font-size: 19px; }
+.sampling-control { margin-top: 18px; padding: 15px 17px 14px; border: 1px solid var(--line); background: rgba(252,251,246,.72); }
+.sampling-heading, .sampling-scale { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.sampling-heading label { font: 650 10px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .07em; }
+.sampling-heading output { color: var(--orange); font: 750 11px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.sampling-control input { width: 100%; margin: 13px 0 7px; accent-color: var(--orange); cursor: pointer; }
+.sampling-scale { color: var(--muted); font: 550 8px var(--font-geist-mono), monospace; text-transform: uppercase; }
+.sampling-control p { margin: 11px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .consent { color: var(--muted); font-size: 11px; margin: 12px 0 0; }
 .form-error { color: #ae2d17; font-size: 12px; margin: 12px 0 0; }
 .form-error button { border: 0; border-bottom: 1px solid currentColor; background: none; color: inherit; padding: 0; }
@@ -107,13 +114,16 @@ button { cursor: pointer; }
 .player-footer { display: grid; grid-template-columns: 1fr 1.3fr auto; align-items: center; gap: 30px; padding-top: 30px; }
 .cue-readout { display: grid; gap: 5px; }.cue-readout span { color: var(--orange); font: 650 9px var(--font-geist-mono), monospace; }.cue-readout strong { font: 650 14px var(--font-geist-mono), monospace; }
 .safe-message { display: flex; align-items: center; gap: 14px; }.safe-message p { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }.lock-icon { color: var(--lime); background: var(--ink); width: 34px; height: 34px; display: grid; place-items: center; }
-.secondary-button { border: 1px solid var(--ink); background: transparent; padding: 12px 16px; font-size: 11px; font-weight: 700; }
+.player-actions { display: flex; align-items: stretch; gap: 8px; }
+.download-button, .secondary-button { border: 1px solid var(--ink); padding: 12px 16px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.download-button { display: grid; place-items: center; background: var(--ink); color: white; text-decoration: none; }
+.secondary-button { background: transparent; }
 
 footer { min-height: 60px; padding: 0 clamp(24px, 5vw, 80px); border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; color: var(--muted); font: 550 9px var(--font-geist-mono), monospace; text-transform: uppercase; }
 @keyframes pulse { 50% { opacity: .25; transform: scale(.7); } }
 
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; }.score-stage { height: 430px; }.proof-strip { grid-template-columns: 1fr; }.proof-strip div { border-right: 0; border-bottom: 1px solid var(--line); padding-left: 0; }.player-footer { grid-template-columns: 1fr; }.player-heading { align-items: start; }.current-score { display: none; }
+  .hero { grid-template-columns: 1fr; }.score-stage { height: 430px; }.proof-strip { grid-template-columns: 1fr; }.proof-strip div { border-right: 0; border-bottom: 1px solid var(--line); padding-left: 0; }.player-footer { grid-template-columns: 1fr; }.player-actions { justify-self: start; }.player-heading { align-items: start; }.current-score { display: none; }
 }
 @media (max-width: 600px) {
   .site-header { height: 70px; }.privacy-pill { font-size: 8px; }.hero { padding-top: 55px; }.hero h1 { font-size: 53px; }.input-row { flex-wrap: wrap; }.input-row input { width: calc(100% - 53px); }.input-row button { width: 100%; min-height: 52px; justify-content: center; }.score-stage { height: 350px; margin-top: 10px; }.floating-cue { display: none; }.processing-title { align-items: start; }.progress-orbit { width: 88px; height: 88px; }.progress-orbit:before { width: 70px; height: 70px; }.progress-orbit strong { font-size: 24px; }.progress-meta { align-items: start; padding: 15px 0; flex-direction: column; gap: 6px; }.processing-note .shield-mark { display: none; }.player-heading h1 { font-size: 39px; }.video-frame { border-width: 5px; }.privacy-cover:before { inset: 10px; }

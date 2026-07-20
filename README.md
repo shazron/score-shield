@@ -99,7 +99,7 @@ Available configuration:
 | --- | --- | --- |
 | `OPENAI_API_KEY` | none | Required for real scoreboard analysis |
 | `OPENAI_MODEL` | `gpt-5.6` | Vision-capable model used for frame analysis |
-| `FRAME_INTERVAL_SECONDS` | `20` | Sampling interval; lower values improve temporal precision but increase cost |
+| `FRAME_INTERVAL_SECONDS` | `10` | Default sampling interval when an API request omits it; must be 5–30 seconds |
 | `PROCESSOR_PORT` | `8787` | Local processing API port |
 | `NEXT_PUBLIC_PROCESSOR_URL` | `http://localhost:8787` | Processor URL used by the React interface |
 | `YTDLP_PATH` | `yt-dlp` on `PATH` | Optional executable override |
@@ -107,6 +107,8 @@ Available configuration:
 | `FFPROBE_PATH` | `ffprobe` on `PATH` | Optional executable override |
 
 Never commit `.env` or expose an API key in browser code.
+
+The local processor validates `OPENAI_API_KEY` during startup. If the key is missing or blank, `npm run processor` and the combined `npm run dev` command exit immediately with instructions to add the key to `.env`; no job is accepted and no video is downloaded. The hosted interactive demo remains available because it does not start the local processor or make API calls.
 
 ## Run locally
 
@@ -128,6 +130,12 @@ https://www.youtube.com/watch?v=jIrmswHtg9E
 
 Only download and analyze media you are authorized to process. If the processor or API key is unavailable, choose **Preview the experience** to exercise the progress and protected-player flows without downloading the video or making model calls.
 
+Before processing, choose a frame sampling interval from 5 to 30 seconds in whole-second steps. The final two minutes are always sampled every 5 seconds, regardless of the selected interval. This wider closing window accounts for stoppage time, celebrations, and outro footage that can place the last goal more than one minute before the media ends. Longer selections still reduce the number of frames and AI calls during the rest of the video. The UI selection overrides `FRAME_INTERVAL_SECONDS` for that job.
+
+Downloaded YouTube media is cached by video URL under `artifacts/cache/youtube/`. Processing the same video again—including an equivalent `youtu.be` link—reuses the cached source instead of contacting YouTube. Frames, AI observations, and metadata are still regenerated for each job so configuration and pipeline changes take effect.
+
+The terminal running `npm run dev` prints timestamped JSON logs for each local processing job. These include source-cache hits and misses, `yt-dlp` download progress, FFprobe inspection, FFmpeg frame extraction, AI frame counts, reconciliation, artifact export, completion, and failures. Logs intentionally omit API keys, model responses, detected scores, and the source video's title.
+
 ## Processing progress
 
 The processor reports structured progress through Server-Sent Events:
@@ -136,20 +144,20 @@ The processor reports structured progress through Server-Sent Events:
 downloading → extracting → analyzing → reconciling → exporting → complete
 ```
 
-The React interface displays the active stage, stage percentage, overall percentage, elapsed time, estimated remaining time when available, and analyzed frame counts. A failed job remains visible with a useful error instead of silently disappearing.
+The React interface displays the active stage, stage percentage, overall percentage, elapsed time, estimated remaining time when available, and analyzed frame counts. A cache hit completes the download stage immediately. A failed job remains visible with a useful error instead of silently disappearing. After a successful local run, the player provides a **Download .vtt** link for the generated metadata track.
 
 ## API
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Processor health check |
-| `POST` | `/api/jobs` | Start a job with `{ "sourceUrl": "https://…" }` |
+| `POST` | `/api/jobs` | Start a job with `{ "sourceUrl": "https://…", "frameIntervalSeconds": 5 }` |
 | `GET` | `/api/jobs/:id` | Get a job snapshot |
 | `GET` | `/api/jobs/:id/events` | Stream progress using Server-Sent Events |
 | `GET` | `/api/jobs/:id/manifest` | Download the completed JSON timeline |
 | `GET` | `/api/jobs/:id/score.vtt` | Download the WebVTT metadata track |
 
-The API accepts HTTPS YouTube and `youtu.be` URLs only. Jobs are currently stored in memory, so processor restarts discard job status while generated files remain on disk.
+The API accepts HTTPS YouTube and `youtu.be` URLs only. `frameIntervalSeconds` is optional for direct API clients, but when provided it must be a whole number from 5 through 30. Jobs are currently stored in memory, so processor restarts discard job status while generated files remain on disk.
 
 ## Generated artifacts
 
@@ -157,23 +165,33 @@ Each job writes to `artifacts/<job-id>/`:
 
 | Artifact | Description |
 | --- | --- |
-| `source.*` | Downloaded source video |
 | `frames/` | Timestamped frames sent for analysis |
 | `observations.json` | Raw, validated AI observations |
-| `manifest.json` | Reconciled score timeline and evidence references |
+| `manifest.json` | Reconciled score timeline, evidence references, selected interval, and high-frequency closing-window settings |
 | `score.vtt` | Time-aligned score metadata track |
 
-The `artifacts/` directory is ignored by Git and may contain large or copyrighted media. Remove job directories manually when they are no longer needed.
+Source media is stored once at `artifacts/cache/youtube/<url-hash>/source.*`. The `artifacts/` directory is ignored by Git and may contain large or copyrighted media. Remove individual job directories when their generated files are no longer needed. Remove `artifacts/cache/youtube/` when cached source videos are no longer needed; the PoC does not currently evict them automatically.
+
+To remove every completed run's frames, observations, manifest, and VTT while preserving the downloaded YouTube cache, stop the processor and run:
+
+```bash
+npm run artifacts:clean
+```
+
+The command is implemented in Node.js and works on macOS, Linux, and Windows. It respects `ARTIFACTS_DIR` when configured and deletes only UUID-named job directories directly beneath that artifacts root; `cache/` and unrelated directories are left intact.
 
 ## Project structure
 
 ```text
 app/                    React interface and styling
 server/index.mjs        Local HTTP API and SSE job progress
+server/config.mjs       Sampling defaults, validation, and closing-window plan
 server/pipeline.mjs     Download, sampling, AI analysis, reconciliation, export
+server/startup.mjs      Processor environment validation
+scripts/clean-artifacts.mjs Cross-platform job-artifact cleanup
 scripts/dev.mjs         Starts the web app and processor together
 scripts/setup.mjs       Cross-platform dependency preparation
-tests/                  Pipeline, setup, and rendered-page tests
+tests/                  Pipeline, startup, cleanup, setup, and rendered-page tests
 public/                 Static assets and social preview
 .openai/hosting.json    Hosted demo configuration
 ```
@@ -186,7 +204,8 @@ npm run setup:check  # Verify dependencies without changing anything
 npm run dev          # Start the web app and processor
 npm run dev:web      # Start only the React web app
 npm run processor    # Start only the local processing API
-npm run test:unit    # Run timeline, WebVTT, and setup tests
+npm run artifacts:clean # Delete job artifacts while preserving video cache
+npm run test:unit    # Run pipeline, startup, cleanup, and setup tests
 npm test             # Run unit tests, production build, and rendered-page test
 npm run lint         # Run ESLint
 npm run build        # Build the hosted React experience
@@ -207,13 +226,20 @@ The workflow at `.github/workflows/openwiki-update.yml` runs daily and can also 
 
 Before running the workflow, add `OPENAI_API_KEY` as a GitHub Actions repository secret under **Settings → Secrets and variables → Actions**. Under **Settings → Actions → General → Workflow permissions**, also allow GitHub Actions to create pull requests. The workflow uses OpenAI with `gpt-5.6-terra`; change `OPENWIKI_PROVIDER`, `OPENWIKI_MODEL_ID`, and the corresponding secret if another [supported provider](https://github.com/langchain-ai/openwiki#customizing) is preferred. CI telemetry is disabled in the checked-in workflow.
 
+## Challenges
+
+1. **The embedded YouTube title can still reveal the result.** Score Shield controls its surrounding React interface and dynamic title, but YouTube owns the contents of its iframe. YouTube may display the video's original title inside the player during loading, pausing, hovering, or playback, and that title may contain the final score.
+2. **Playing the downloaded MP4 ourselves would avoid that provider overlay.** A native HTML video player could use the cached, authorized source copy and give Score Shield full control over every visible title and control surface. Implementing secure media serving, byte-range seeking, and the corresponding playback UI is left as a later exercise.
+3. **Embedding the WebVTT as a metadata track would make the result more portable.** The reference implementation currently emits `score.vtt` as a sidecar file that the interface can download and consume alongside the video. Muxing it into the media container would allow the score timeline to travel with the video itself. Browsers do not currently provide dependable native access to this kind of embedded MP4 metadata track, so the Score Shield UI would also need to extract or demux the track and read its cues directly in JavaScript. Both the embedding step and that JavaScript reader are left as a later exercise.
+
 ## Current limitations
 
 - The PoC targets scoreboard-based sports broadcasts and is not yet sport-specific.
-- Sampling every 20 seconds favors cost over exact scoring-event timing.
+- The default sampling interval is 10 seconds, with a 5-second override during the final two minutes; brief scoreboard states can still fall between sampled frames.
 - The first implementation analyzes sampled frames sequentially and does not yet cache unchanged scoreboard crops.
 - A YouTube iframe may display provider-owned title or thumbnail UI that the surrounding page cannot fully control. The player covers the iframe until the viewer chooses to begin.
 - Local job state is not durable across processor restarts.
+- Cached source videos do not currently have an automatic size limit or expiration policy.
 - The hosted site demonstrates the interface; it does not host the FFmpeg processing worker.
 
 ## Development guidelines
