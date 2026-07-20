@@ -126,6 +126,7 @@ button { cursor: pointer; }
 
 .player-shell { max-width: 1500px; margin: 0 auto; }
 .player-heading { display: flex; justify-content: space-between; align-items: end; gap: 40px; margin-bottom: 35px; }
+.match-status { color: var(--orange); font: 650 .3em var(--font-geist-mono), monospace; letter-spacing: .01em; white-space: nowrap; vertical-align: .35em; }
 .current-score { display: grid; justify-items: end; }.current-score small, .current-score span { font: 600 9px var(--font-geist-mono), monospace; color: var(--muted); text-transform: uppercase; }.current-score strong { font-size: 42px; letter-spacing: -.06em; }.current-score i { font-style: normal; color: var(--orange); padding: 0 9px; }
 .video-frame { position: relative; aspect-ratio: 16/9; background: var(--night); border: 10px solid var(--night); box-shadow: 14px 16px 0 rgba(16,27,37,.12); }
 .video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }

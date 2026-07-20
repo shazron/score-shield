@@ -11,6 +11,7 @@ Preserve these product invariants:
 - Never expose a future score, scorer, event, or final result in the visible UI, page title, accessibility text, debug output, or timeline labels before its cue becomes active.
 - Do not fetch or render the original YouTube title in the product UI; it may itself contain a spoiler.
 - Resolve score state from the current media time. Seeking backward must restore the earlier score, and seeking forward must immediately resolve the destination cue.
+- Label playhead-derived scores as in progress until the player reports that playback ended. Only then may the visible and document titles say final; seeking backward must remove the final state.
 - Treat model results as candidate observations. Deterministic reconciliation code remains authoritative.
 - Keep real processing local unless the deployment environment explicitly supports FFmpeg, `yt-dlp`, filesystem artifacts, secrets, and long-running jobs.
 - Download and process only media the operator is authorized to use. Do not add access-control bypasses or cookie extraction by default.

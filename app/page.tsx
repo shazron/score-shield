@@ -228,22 +228,26 @@ function ProgressScreen({ progress, onCancel }: { progress: Progress; onCancel: 
   );
 }
 
-function YouTubePlayer({ videoId, onTime }: { videoId: string; onTime: (time: number) => void }) {
+function YouTubePlayer({ videoId, onTime, onEnded }: { videoId: string; onTime: (time: number) => void; onEnded: () => void }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const [uncovered, setUncovered] = useState(false);
 
   useEffect(() => {
     function receive(event: MessageEvent) {
-      if (event.origin !== "https://www.youtube.com") return;
+      if (event.origin !== "https://www.youtube.com" || event.source !== frame.current?.contentWindow) return;
       try {
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-        if (data?.event === "infoDelivery" && typeof data.info?.currentTime === "number") onTime(data.info.currentTime);
+        if (data?.event === "infoDelivery") {
+          if (typeof data.info?.currentTime === "number") onTime(data.info.currentTime);
+          if (data.info?.playerState === 0) onEnded();
+        }
+        if (data?.event === "onStateChange" && data.info === 0) onEnded();
       } catch { /* Ignore unrelated frame messages. */ }
     }
     window.addEventListener("message", receive);
     const timer = window.setInterval(() => frame.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: "score-shield" }), "https://www.youtube.com"), 1000);
     return () => { window.removeEventListener("message", receive); window.clearInterval(timer); };
-  }, [onTime]);
+  }, [onEnded, onTime]);
 
   return <div className="video-frame">
     <iframe ref={frame} title="Spoiler-free match video" src={`https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${typeof window !== "undefined" ? window.location.origin : ""}&rel=0&modestbranding=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
@@ -253,19 +257,30 @@ function YouTubePlayer({ videoId, onTime }: { videoId: string; onTime: (time: nu
 
 function PlayerScreen({ cues, videoUrl, vttUrl, onReset }: { cues: ScoreCue[]; videoUrl: string; vttUrl: string | null; onReset: () => void }) {
   const [time, setTime] = useState(0);
+  const [isFinal, setIsFinal] = useState(false);
   const cue = useMemo(() => cueAt(cues, time), [cues, time]);
+  const finalCueEnd = cues[cues.length - 1]?.end ?? Number.POSITIVE_INFINITY;
   const parsedUrl = new URL(videoUrl);
   const videoId = parsedUrl.hostname === "youtu.be" ? parsedUrl.pathname.slice(1) : parsedUrl.searchParams.get("v") ?? "jIrmswHtg9E";
-  const safeTitle = `${cue.home.name} ${cue.home.score}–${cue.away.score} ${cue.away.name}`;
+  const scoreTitle = `${cue.home.name} ${cue.home.score}–${cue.away.score} ${cue.away.name}`;
+  const matchStatus = isFinal ? "final" : "in progress";
+  const safeTitle = `${scoreTitle} (${matchStatus})`;
+
+  const updateTime = useCallback((nextTime: number) => {
+    setTime(nextTime);
+    if (nextTime < finalCueEnd - 1) setIsFinal(false);
+  }, [finalCueEnd]);
+
+  const markEnded = useCallback(() => setIsFinal(true), []);
 
   useEffect(() => { document.title = `${safeTitle} · Score Shield`; }, [safeTitle]);
 
   return <main className="player-shell">
     <section className="player-heading">
-      <div><span className="status-kicker"><i /> Synced to your playhead</span><h1>{safeTitle}</h1><p>The score above contains no information beyond this exact moment.</p></div>
+      <div><span className="status-kicker"><i /> Synced to your playhead</span><h1>{scoreTitle} <span className="match-status">({matchStatus})</span></h1><p>{isFinal ? "Playback has reached the end of the game." : "This is the score at the current playhead—not the final result."}</p></div>
       <div className="current-score"><small>{formatTime(time)}</small><strong>{cue.home.score}<i>–</i>{cue.away.score}</strong><span>{Math.round(cue.confidence * 100)}% verified</span></div>
     </section>
-    <YouTubePlayer videoId={videoId} onTime={setTime} />
+    <YouTubePlayer videoId={videoId} onTime={updateTime} onEnded={markEnded} />
     <section className="player-footer">
       <div className="cue-readout"><span>ACTIVE METADATA CUE</span><strong>{formatTime(cue.start)} → {formatTime(cue.end)}</strong></div>
       <div className="safe-message"><span className="lock-icon">◆</span><p><strong>Future cues stay sealed.</strong><br />Seeking updates the title instantly without listing upcoming events.</p></div>
