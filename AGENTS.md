@@ -102,7 +102,7 @@ Add regression tests for cue boundaries, invalid score regressions, malformed mo
 ## Documentation and deployment
 
 - Update `README.md`, `.env.example`, and this file when commands, prerequisites, configuration, architecture, or product limitations change.
-- OpenWiki is installed globally at the version documented in `README.md`. Its scheduled GitHub Actions workflow updates `openwiki/`, and `AGENTS.md` through a documentation pull request; do not place provider credentials in workflow files.
+- OpenWiki is installed globally at the version documented in `README.md`. Its scheduled GitHub Actions workflow updates `openwiki/`, and `AGENTS.md` through a documentation pull request. Keep that workflow fixed to OpenAI with `gpt-5.6-terra`, reference only the `OPENAI_API_KEY` repository secret, and do not add other provider or tracing credentials.
 - The hosted Sites deployment is the UI/demo surface. The local Node processor is not bundled into the Cloudflare-compatible deployment artifact.
 - Do not commit `.env`, `artifacts/`, downloaded video, extracted frames, temporary archives, credentials, or source-repository tokens.
 - Do not publish, change site access, rotate credentials, or push to an external remote unless the user explicitly requests it or the active hosting workflow requires it.

@@ -260,7 +260,7 @@ npm run wiki:init
 
 The workflow at `.github/workflows/openwiki-update.yml` runs daily and can also be started manually from the GitHub Actions tab. It refreshes the wiki and opens or updates a `docs: update OpenWiki` pull request rather than writing directly to the default branch.
 
-Before running the workflow, add `OPENAI_API_KEY` as a GitHub Actions repository secret under **Settings → Secrets and variables → Actions**. Under **Settings → Actions → General → Workflow permissions**, also allow GitHub Actions to create pull requests. The workflow uses OpenAI with `gpt-5.6-terra`; change `OPENWIKI_PROVIDER`, `OPENWIKI_MODEL_ID`, and the corresponding secret if another [supported provider](https://github.com/langchain-ai/openwiki#customizing) is preferred. CI telemetry is disabled in the checked-in workflow.
+Before running the workflow, add `OPENAI_API_KEY` as a GitHub Actions repository secret under **Settings → Secrets and variables → Actions**. Under **Settings → Actions → General → Workflow permissions**, also allow GitHub Actions to create pull requests. The workflow is fixed to OpenAI with `gpt-5.6-terra` and uses `OPENAI_API_KEY` as its only credential; it does not require OpenRouter, LangSmith, or another provider secret.
 
 ## Challenges
 
