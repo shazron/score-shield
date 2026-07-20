@@ -19,6 +19,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_VIDEO_URL = "https://www.youtube.com/watch?v=jIrmswHtg9E";
+const GITHUB_REPOSITORY_URL = "https://github.com/shazron/score-shield";
 const PROCESSOR_URL = process.env.NEXT_PUBLIC_PROCESSOR_URL ?? "http://localhost:8787";
 const DEFAULT_FRAME_INTERVAL_SECONDS = 10;
 const DEMO_DURATION_SECONDS = 917;
@@ -103,7 +104,10 @@ function Header({ onReset }: { onReset?: () => void }) {
         <ShieldMark />
         <span>Score Shield</span>
       </button>
-      <div className="privacy-pill"><span className="privacy-dot" /> Spoiler protection on</div>
+      <div className="header-actions">
+        <a className="repository-link" href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
+        <div className="privacy-pill"><span className="privacy-dot" /> Spoiler protection on</div>
+      </div>
     </header>
   );
 }
@@ -268,6 +272,18 @@ function PlayerScreen({ cues, videoUrl, vttUrl, onReset }: { cues: ScoreCue[]; v
         {vttUrl && <a className="download-button" href={vttUrl} download="score-shield.vtt">Download .vtt</a>}
         <button className="secondary-button" onClick={onReset}>Process another video</button>
       </div>
+    </section>
+    <section className="challenges" aria-labelledby="challenges-title">
+      <div className="challenges-heading">
+        <p>Prototype notes</p>
+        <h2 id="challenges-title">Challenges still to solve</h2>
+        <span>This reference implementation proves the score-timeline idea while leaving a few platform-level problems for future work.</span>
+      </div>
+      <ol className="challenge-grid">
+        <li><strong>01</strong><h3>YouTube can still reveal its title</h3><p>The cover protects the initial player area, but YouTube’s own player chrome may show the source title after playback begins—and that title may contain the final score.</p></li>
+        <li><strong>02</strong><h3>First-party playback is the workaround</h3><p>Playing the authorized downloaded MP4 in our own video player would remove YouTube’s title overlay. That playback path is intentionally left for a later exercise.</p></li>
+        <li><strong>03</strong><h3>Portable metadata needs another step</h3><p>The prototype uses a WebVTT sidecar that the UI reads directly with JavaScript. Embedding it into the video would make the timeline portable, but browsers do not currently expose embedded metadata tracks consistently.</p></li>
+      </ol>
     </section>
   </main>;
 }
