@@ -2,6 +2,8 @@
 
 > Built for **OpenAI Build Week, 13–21 July 2026**.
 
+**Built with Codex & GPT-5.6:** Codex planned, implemented, tested, documented, and deployed the reference app, while GPT-5.6 reads sampled scoreboard frames and produces candidate score observations for deterministic verification.
+
 ![Score Shield spoiler-free sports experience and AI-generated metadata timeline](public/score-shield-hero.png)
 
 Score Shield is a Node.js and React reference implementation for spoiler-free sports playback. It downloads an authorized YouTube video, samples timestamped frames, uses AI to read the broadcast scoreboard, reconciles those observations into a reliable score timeline, and exports a WebVTT metadata track. The player uses the metadata to show only the score at the viewer's current playhead.
