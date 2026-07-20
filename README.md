@@ -20,9 +20,9 @@ This approach gives streaming providers a practical way to preserve suspense wit
 
 Open the public preview in any modern browser:
 
-**[Open the Score Shield preview](https://score-shield-sports.shazron.chatgpt.site)**
+**[Open the Score Shield interactive preview](https://score-shield-sports.shazron.chatgpt.site/preview)**
 
-No ChatGPT login is required, so the link can be shared directly with demo viewers. On the landing screen, select **Preview the experience** to run the built-in FRA vs ENG demonstration and see the protected title and score update as playback advances or the timeline is scrubbed.
+No ChatGPT login is required, so the link can be shared directly with demo viewers. The `/preview` route automatically runs the built-in FRA vs ENG demonstration and shows the protected title and score updating as playback advances. The main project landing page remains available at [score-shield-sports.shazron.chatgpt.site](https://score-shield-sports.shazron.chatgpt.site).
 
 The hosted preview uses public demonstration data and does not run the video-processing worker. To analyze a YouTube video and generate a new score timeline, follow [Prepare a development machine](#prepare-a-development-machine), [Configure AI analysis](#configure-ai-analysis), and [Run locally](#run-locally) below.
 

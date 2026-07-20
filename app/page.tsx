@@ -16,7 +16,8 @@
 
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 
 const DEFAULT_VIDEO_URL = "https://www.youtube.com/watch?v=jIrmswHtg9E";
 const GITHUB_REPOSITORY_URL = "https://github.com/shazron/score-shield";
@@ -97,13 +98,13 @@ function ShieldMark() {
   return <span className="shield-mark" aria-hidden="true"><span>SS</span></span>;
 }
 
-function Header({ onReset }: { onReset?: () => void }) {
+function Header() {
   return (
     <header className="site-header">
-      <button className="brand" onClick={onReset} aria-label="Score Shield home">
+      <Link className="brand" href="/" aria-label="Score Shield home">
         <ShieldMark />
         <span>Score Shield</span>
-      </button>
+      </Link>
       <div className="header-actions">
         <a className="repository-link" href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
         <div className="privacy-pill"><span className="privacy-dot" /> Spoiler protection on</div>
@@ -112,7 +113,7 @@ function Header({ onReset }: { onReset?: () => void }) {
   );
 }
 
-function Landing({ onProcess, onDemo }: { onProcess: (url: string, frameIntervalSeconds: number) => Promise<void>; onDemo: () => void }) {
+function Landing({ onProcess }: { onProcess: (url: string, frameIntervalSeconds: number) => Promise<void> }) {
   const [url, setUrl] = useState(DEFAULT_VIDEO_URL);
   const [frameIntervalSeconds, setFrameIntervalSeconds] = useState(DEFAULT_FRAME_INTERVAL_SECONDS);
   const [submitting, setSubmitting] = useState(false);
@@ -154,7 +155,7 @@ function Landing({ onProcess, onDemo }: { onProcess: (url: string, frameInterval
               <div className="sampling-scale" aria-hidden="true"><span>5s · most precise</span><span>30s · lowest cost</span></div>
               <p id="sampling-help">The final two minutes are always sampled every 5 seconds. Shorter intervals improve accuracy but analyze more frames and use more API calls.</p>
             </div>
-            {error && <p className="form-error" role="alert">{error} <button type="button" onClick={onDemo}>Preview the experience instead</button></p>}
+            {error && <p className="form-error" role="alert">{error} <Link href="/preview">Preview the experience instead</Link></p>}
             <p className="consent">Only process media you are authorized to download and analyze.</p>
           </form>
         </div>
@@ -185,7 +186,7 @@ function Landing({ onProcess, onDemo }: { onProcess: (url: string, frameInterval
       <section className="principle">
         <p>Built for catch-up viewing</p>
         <h2>No final scores. No accidental thumbnails.<br />Just the match as it unfolds.</h2>
-        <button className="text-button" onClick={onDemo}>Try the interactive demo <span>↗</span></button>
+        <Link className="text-button" href="/preview">Try the interactive demo <span>↗</span></Link>
       </section>
     </main>
   );
@@ -288,8 +289,8 @@ function PlayerScreen({ cues, videoUrl, vttUrl, onReset }: { cues: ScoreCue[]; v
   </main>;
 }
 
-export default function Home() {
-  const [view, setView] = useState<"landing" | "processing" | "player">("landing");
+export function ScoreShieldApp({ autoStartDemo = false }: { autoStartDemo?: boolean }) {
+  const [view, setView] = useState<"landing" | "processing" | "player">(autoStartDemo ? "processing" : "landing");
   const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO_URL);
   const [cues, setCues] = useState<ScoreCue[]>(demoCues);
   const [vttUrl, setVttUrl] = useState<string | null>(null);
@@ -297,13 +298,17 @@ export default function Home() {
   const streamRef = useRef<EventSource | null>(null);
   const demoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  function reset() {
+  const reset = useCallback(() => {
     streamRef.current?.close();
     if (demoTimer.current) clearInterval(demoTimer.current);
+    if (autoStartDemo) {
+      window.location.assign("/");
+      return;
+    }
     document.title = "Score Shield · Spoiler-free sports viewing";
     setVttUrl(null);
     setView("landing");
-  }
+  }, [autoStartDemo]);
 
   async function processVideo(url: string, frameIntervalSeconds: number) {
     setVideoUrl(url);
@@ -330,7 +335,7 @@ export default function Home() {
     };
   }
 
-  function startDemo() {
+  const startDemo = useCallback(() => {
     setVideoUrl(DEFAULT_VIDEO_URL);
     setVttUrl(null);
     setView("processing");
@@ -355,13 +360,24 @@ export default function Home() {
         window.setTimeout(() => { setCues(demoCues); setView("player"); }, 500);
       }
     }, 65);
-  }
+  }, []);
+
+  const demoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoStartDemo || demoStarted.current) return;
+    demoStarted.current = true;
+    startDemo();
+  }, [autoStartDemo, startDemo]);
 
   return <div className="app-shell">
-    <Header onReset={reset} />
-    {view === "landing" && <Landing onProcess={processVideo} onDemo={startDemo} />}
+    <Header />
+    {view === "landing" && <Landing onProcess={processVideo} />}
     {view === "processing" && <ProgressScreen progress={progress} onCancel={reset} />}
     {view === "player" && <PlayerScreen cues={cues} videoUrl={videoUrl} vttUrl={vttUrl} onReset={reset} />}
     <footer><span>Score Shield · Reference implementation</span><span>Metadata, not spoilers.</span></footer>
   </div>;
+}
+
+export default function Home() {
+  return <ScoreShieldApp />;
 }

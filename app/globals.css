@@ -35,7 +35,7 @@ button { cursor: pointer; }
 .app-shell { min-height: 100vh; overflow: hidden; }
 
 .site-header { height: 84px; padding: 0 clamp(24px, 5vw, 80px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
-.brand { display: flex; align-items: center; gap: 12px; border: 0; background: none; color: var(--ink); font-weight: 750; font-size: 18px; letter-spacing: -.03em; }
+.brand { display: flex; align-items: center; gap: 12px; border: 0; background: none; color: var(--ink); font-weight: 750; font-size: 18px; letter-spacing: -.03em; text-decoration: none; }
 .header-actions { display: flex; align-items: center; gap: 12px; }
 .repository-link { color: var(--ink); font: 650 10px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; border-bottom: 1px solid var(--ink); padding: 8px 0 6px; }
 .repository-link:hover { color: var(--orange); border-color: var(--orange); }
@@ -72,7 +72,7 @@ button { cursor: pointer; }
 .sampling-control p { margin: 11px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .consent { color: var(--muted); font-size: 11px; margin: 12px 0 0; }
 .form-error { color: #ae2d17; font-size: 12px; margin: 12px 0 0; }
-.form-error button { border: 0; border-bottom: 1px solid currentColor; background: none; color: inherit; padding: 0; }
+.form-error a { border-bottom: 1px solid currentColor; color: inherit; text-decoration: none; }
 
 .score-stage { height: 500px; background: var(--night); position: relative; display: grid; place-items: center; transform: rotate(1.2deg); box-shadow: 18px 20px 0 rgba(16,27,37,.12); overflow: hidden; }
 .score-stage:before { content: ""; position: absolute; width: 430px; height: 430px; border: 1px solid rgba(200,255,66,.13); border-radius: 50%; box-shadow: 0 0 0 70px rgba(200,255,66,.025), 0 0 0 140px rgba(200,255,66,.02); }
@@ -100,7 +100,7 @@ button { cursor: pointer; }
 .principle { padding: 100px 24px 120px; text-align: center; background: var(--paper); }
 .principle p { font: 650 10px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .1em; color: var(--orange); }
 .principle h2 { font: 400 clamp(34px, 4vw, 62px)/1.08 Georgia, serif; letter-spacing: -.045em; margin: 25px auto 35px; }
-.text-button { border: 0; border-bottom: 1px solid var(--ink); background: none; padding: 8px 0; font-weight: 700; }
+.text-button { display: inline-block; border: 0; border-bottom: 1px solid var(--ink); background: none; color: var(--ink); padding: 8px 0; font-weight: 700; text-decoration: none; }
 .text-button span { color: var(--orange); }
 
 .processing-shell, .player-shell { min-height: calc(100vh - 144px); padding: clamp(38px, 6vw, 88px) clamp(20px, 6vw, 100px); background-image: radial-gradient(rgba(16,27,37,.11) 1px, transparent 1px); background-size: 24px 24px; }
