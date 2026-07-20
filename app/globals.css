@@ -37,7 +37,8 @@ button { cursor: pointer; }
 .site-header { height: 84px; padding: 0 clamp(24px, 5vw, 80px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 12px; border: 0; background: none; color: var(--ink); font-weight: 750; font-size: 18px; letter-spacing: -.03em; text-decoration: none; }
 .header-actions { display: flex; align-items: center; gap: 12px; }
-.repository-link { color: var(--ink); font: 650 10px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; border-bottom: 1px solid var(--ink); padding: 8px 0 6px; }
+.repository-link { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font: 650 10px var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; border-bottom: 1px solid var(--ink); padding: 8px 0 6px; }
+.github-icon { width: 14px; height: 14px; flex: 0 0 auto; background: currentColor; -webkit-mask: url("https://github.githubassets.com/favicons/favicon.svg") center / contain no-repeat; mask: url("https://github.githubassets.com/favicons/favicon.svg") center / contain no-repeat; }
 .repository-link:hover { color: var(--orange); border-color: var(--orange); }
 .repository-link:focus-visible { outline: 2px solid var(--orange); outline-offset: 4px; }
 .shield-mark { width: 33px; height: 38px; background: var(--ink); color: var(--lime); display: inline-grid; place-items: center; clip-path: polygon(50% 0, 92% 15%, 88% 70%, 50% 100%, 12% 70%, 8% 15%); flex: 0 0 auto; }

@@ -39,6 +39,7 @@ test("server-renders the Score Shield product shell", async () => {
   assert.match(html, /Frame sampling interval/);
   assert.match(html, /https:\/\/github\.com\/shazron\/score-shield/);
   assert.match(html, /View on GitHub/);
+  assert.match(html, /github-icon/);
   assert.match(html, /href="\/preview"/);
   assert.match(html, /final two minutes are always sampled every 5 seconds/i);
   assert.match(html, /jIrmswHtg9E/);

@@ -106,7 +106,7 @@ function Header() {
         <span>Score Shield</span>
       </Link>
       <div className="header-actions">
-        <a className="repository-link" href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
+        <a className="repository-link" href={GITHUB_REPOSITORY_URL} target="_blank" rel="noreferrer"><span className="github-icon" aria-hidden="true" /> View on GitHub <span aria-hidden="true">↗</span></a>
         <div className="privacy-pill"><span className="privacy-dot" /> Spoiler protection on</div>
       </div>
     </header>
