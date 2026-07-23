@@ -63,4 +63,4 @@ The setup script requires `ffmpeg`, `ffprobe`, and `yt-dlp`. It selects Homebrew
 
 `.github/workflows/openwiki-update.yml` runs on a daily schedule and manually. It installs OpenWiki, runs `openwiki code --update --print`, and uses `peter-evans/create-pull-request` to open or update an `openwiki/update` branch PR. Its configured provider is OpenRouter with model `z-ai/glm-5.2`; it passes repository secrets by name (`OPENROUTER_API_KEY`, plus LangSmith tracing settings) and does not commit credentials.
 
-The workflow’s PR scope includes `openwiki`, `AGENTS.md`, and the workflow itself. Local equivalents are `npm run wiki:init` and `npm run wiki:update`. Generated wiki content belongs under `openwiki/`; source documentation and the agent guide remain primary evidence for changes to the runtime.
+The workflow’s PR scope includes `openwiki`, `AGENTS.md`, `CLAUDE.md`, and the workflow itself. Local equivalents are `npm run wiki:init` and `npm run wiki:update`. Generated wiki content belongs under `openwiki/`; source documentation and the agent guide remain primary evidence for changes to the runtime.
